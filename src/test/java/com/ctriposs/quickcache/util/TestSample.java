@@ -9,7 +9,7 @@ public class TestSample implements Serializable {
     public String stringB = "bbbbbbbbbb";
     public BuySell enumA = BuySell.Buy;
     public BuySell enumB = BuySell.Sell;
-    public int intA = 12345;
+    public int intA = 123456;
     public int intB = 654321;
     public double doubleA = 1.23456789;
     public double doubleB = 9.87654321;

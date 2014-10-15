@@ -2,7 +2,9 @@ package com.ctriposs.quickcache.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -86,21 +88,22 @@ public class StorageBlock implements IBlock {
 	 * Stores the payload by the help of allocation.
 	 *
 	 * @param allocation the allocation
-	 * @param payloadLength the payload
 	 * @return the pointer
 	 * @throws IOException 
 	 */
 	public Pointer store(Allocation allocation, byte[] key, byte[] value, long ttl) throws IOException {
 		Pointer pointer = new Pointer(this, allocation.metaOffset, key.length, value.length, ttl);
-		underlyingStorage.put(allocation.metaOffset, makeItemBytes(allocation, pointer, key, value));
+		underlyingStorage.put(allocation.metaOffset, makeItemBytes(pointer, key, value));
 		// used storage update
 		usedStorage.addAndGet(pointer.getItemSize() + Meta.META_SIZE);
 		return pointer;
 	}
 
 	
-	private byte[] makeItemBytes(Allocation allocation,Pointer pointer,byte[] key, byte[] value) {		
-		byte[] bytes = new byte[Meta.META_SIZE+key.length+value.length];
+	private byte[] makeItemBytes(Pointer pointer,byte[] key, byte[] value) {
+		byte[] bytes = new byte[Meta.META_SIZE + key.length + value.length];
+        //ByteBuffer byteBuffer = ByteBuffer.allocate(Meta.META_SIZE + key.length + value.length);
+        //byteBuffer.put(ByteUtil.toBytes(pointer.getLastAccessTime()));
 		System.arraycopy(ByteUtil.toBytes(pointer.getLastAccessTime()), 0, bytes, Meta.LAST_ACCESS_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(pointer.getTtl()), 0, bytes, Meta.TTL_OFFSET, 8);
 		
@@ -172,7 +175,6 @@ public class StorageBlock implements IBlock {
 		/**
 		 * Instantiates a new allocation.
 		 *
-		 * @param itemOffset offset
 		 * @param metaOffset offset
 		 */
 		public Allocation(int metaOffset) {

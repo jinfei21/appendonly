@@ -18,8 +18,8 @@ import java.util.concurrent.Future;
 @RunWith(Parameterized.class)
 public class QuickCachePutPerfTest {
 
-    private static final int INIT_COUNT = 400000;
-    private static final int THREAD_COUNT = 256;
+    private static final int INIT_COUNT = 600000;
+    private static final int THREAD_COUNT = 512;
     private static final String TEST_DIR = TestUtil.TEST_BASE_DIR + "performance/put/";
 
     private static QuickCache<String> cache;
@@ -45,9 +45,6 @@ public class QuickCachePutPerfTest {
 
         TestSample sample = new TestSample();
         for (int i = 0; i < INIT_COUNT; i++) {
-            sample.intA = i;
-            sample.doubleA = i;
-            sample.longA = i;
             cache.put(String.valueOf(i), sample.toBytes());
         }
 
@@ -59,20 +56,24 @@ public class QuickCachePutPerfTest {
         cache = cache();
         final TestSample sample = new TestSample();
         Random random = new Random();
-
         long start = System.nanoTime();
 
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            sample.intA = i;
-            sample.doubleA = i;
-            sample.longA = 10;
             sample.stringA = "a";
+            sample.stringB = "b";
             String key = String.valueOf(random.nextInt(INIT_COUNT));
             cache.put(key, sample.toBytes());
         }
+        for (int i = 0; i < 2 * INIT_COUNT; i++) {
+            sample.stringA = "aaaaaaaaaaaaaaa";
+            sample.stringB = "bbbbbbbbbbbbbbb";
+            String key = String.valueOf(random.nextInt(INIT_COUNT));
+            cache.put(key, sample.toBytes());
+        }
+
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
-                (int) (INIT_COUNT * 2 * 1e6 / duration));
+                (int) (INIT_COUNT * 4 * 1e6 / duration));
     }
 
     @Test
@@ -94,10 +95,7 @@ public class QuickCachePutPerfTest {
                     try {
                         final TestSample sample = new TestSample();
                         for (int j = finalI; j < count; j += THREAD_COUNT) {
-                            sample.intA = j;
-                            sample.doubleA = j;
-                            sample.longA = j;
-                            sample.stringA = "a";
+                            sample.stringA = "aaaaa";
                             cache.put(String.valueOf(random.nextInt(INIT_COUNT)), sample.toBytes());
                         }
                     } catch (IOException e) {
