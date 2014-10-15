@@ -98,7 +98,7 @@ public class StorageManager {
 		this.startMode = startMode;
 		this.capacityPerBlock = capacityPerBlock;
 		this.dir = dir;
-		if (storageMode == StorageMode.MapFile) {
+		if (storageMode != StorageMode.PureFile) {
 			this.allowedOffHeapModeBlockCount = (int) (maxOffHeapMemorySize / capacityPerBlock);
 		} else {
 			this.allowedOffHeapModeBlockCount = 0;
@@ -205,7 +205,7 @@ public class StorageManager {
 	}
 	
 	private IBlock createNewBlock(int index) throws IOException {
-		if(storageMode == StorageMode.MapFile) {
+		if(storageMode != StorageMode.PureFile) {
 			if(allowedOffHeapModeBlockCount<0) {
 				return new StorageBlock(this.dir, index, this.capacityPerBlock, StorageMode.PureFile);
 			}
