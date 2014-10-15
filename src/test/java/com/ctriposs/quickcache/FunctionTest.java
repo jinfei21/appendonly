@@ -20,7 +20,7 @@ public class FunctionTest extends TestCase {
 			String str = "123";
 			byte res[] = cache.get("2");
 			System.out.println("get2:"+new String(res));
-			for(int i=0;i<10;i++) {
+			for(int i=0;i<100;i++) {
 				cache.put("2", ("hello"+i).getBytes());
 			}
 			
