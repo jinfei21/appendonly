@@ -35,7 +35,6 @@ public class Meta implements Serializable {
 		return keySize;
 	}
 
-
 	public void setKeySize(int keySize) {
 		this.keySize = keySize;
 	}

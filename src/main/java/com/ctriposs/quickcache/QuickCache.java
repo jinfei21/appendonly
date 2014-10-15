@@ -5,6 +5,7 @@ import static com.ctriposs.quickcache.utils.ByteUtil.ToBytes;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -140,7 +141,6 @@ public class QuickCache<K> implements ICache<K> {
         WrapperKey wKey = new WrapperKey(ToBytes(key));
 		Pointer oldPointer = pointerMap.remove(wKey);
 		if(oldPointer!=null) {
-			//byte[] payload = storageManager.remove(oldPointer);
 			//byte[] payload = storageManager.retrieve(oldPointer);
 			byte[] bytes = new byte[1];
 			Pointer newPointer = storageManager.store(wKey.getKey(),bytes,Meta.TTL_DELETE);
@@ -166,10 +166,8 @@ public class QuickCache<K> implements ICache<K> {
             throw new IllegalArgumentException("value is null or too long");
         }
         WrapperKey wKey = new WrapperKey(ToBytes(key));
-   
        
-		Pointer newPointer = storageManager.store(wKey.getKey(), value, ttl);
-		//*
+		Pointer newPointer = storageManager.store(wKey.getKey(), value, ttl);		
 		while(true) {
 			Pointer oldPointer = pointerMap.get(wKey);
 			if(oldPointer != null){
@@ -195,9 +193,7 @@ public class QuickCache<K> implements ICache<K> {
 					break;
 				}
 			}
-		}//*/
-		
-
+		}
 	}
 
 	@Override
@@ -263,36 +259,12 @@ public class QuickCache<K> implements ICache<K> {
 		public void process(QuickCache<K> cache) {
 			
 			migrateCounter.incrementAndGet();
-			/*
-			for(IBlock block:cache.storageManager.getDirtyBlocks()) {
-				try {
-					for(Meta meta : block.getAllValidMeta()) {
-						Item item = block.readItem(meta);
-						WrapperKey wKey = new WrapperKey(item.getKey());
-						Pointer oldPointer = pointerMap.get(wKey);
-						if(oldPointer != null) {		
-							if(oldPointer.getBlock() == block&&meta.getLastAccessTime()==oldPointer.getLastAccessTime()) {
-								Pointer newPointer = storageManager.store(item.getKey(), item.getValue(), meta.getTtl());							
-								if(pointerMap.replace(wKey, oldPointer, newPointer)) {
-									storageManager.markDirty(oldPointer);								
-								}else {
-									storageManager.markDirty(newPointer);
-								}
-							}
-						}
-					}
-					block.free();
-				}catch(Throwable t) {
-					migrateErrorCounter.incrementAndGet();
-				}
-				
-			}*/
-			Set<IBlock> set = cache.storageManager.getDirtyBlocks();
+			Set<IBlock> dirtySet = cache.storageManager.getDirtyBlocks();
+			Set<IBlock> errorSet = new HashSet<IBlock>();
 			for (WrapperKey wKey : pointerMap.keySet()) {
-				
 				Pointer oldPointer = pointerMap.get(wKey);
 				if(oldPointer != null) {	
-					if(set.contains(oldPointer.getBlock())) {
+					if(dirtySet.contains(oldPointer.getBlock())) {
 						try {
 							byte[] value = oldPointer.getBlock().retrieve(oldPointer);
 							Pointer newPointer = storageManager.store(wKey.getKey(), value, oldPointer.getTtl());	
@@ -303,14 +275,17 @@ public class QuickCache<K> implements ICache<K> {
 							}
 						} catch (Throwable t) {
 							migrateErrorCounter.incrementAndGet();
+							errorSet.add(oldPointer.getBlock());
 						}
 					}
 				}
 				
 			}
 			
-			for(IBlock block:set) {
-				block.free();
+			for(IBlock block:dirtySet) {
+				if(!errorSet.contains(block)) {
+					block.free();
+				}
 			}
 			
 			storageManager.clean();

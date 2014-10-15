@@ -39,18 +39,11 @@ public interface IBlock extends Comparable<IBlock>, Closeable {
 	int markDirty(int dirtySzie);
 	
 	/**
-	 * Get all valid meta of this storage block
-	 * 
-	 * @return count
-	 */
-	List<Meta> getAllValidMeta()throws IOException; 
-	
-	/**
 	 * Get item for this meta
 	 * 
 	 * @return item
 	 */
-	Item readItem(Meta meta) throws IOException; 
+	Item readItem(int offset) throws IOException; 
 	
 	/**
 	 * Calculates and returns total size of the dirty space.

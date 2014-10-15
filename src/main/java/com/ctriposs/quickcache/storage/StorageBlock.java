@@ -2,14 +2,11 @@ package com.ctriposs.quickcache.storage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ctriposs.quickcache.CacheConfig.StorageMode;
 import com.ctriposs.quickcache.IBlock;
 import com.ctriposs.quickcache.IStorage;
-import com.ctriposs.quickcache.QuickCache;
 import com.ctriposs.quickcache.utils.ByteUtil;
 
 
@@ -102,11 +99,9 @@ public class StorageBlock implements IBlock {
 	private byte[] makeItemBytes(Allocation allocation,Pointer pointer,byte[] key, byte[] value) {		
 		byte[] bytes = new byte[Meta.META_SIZE+key.length+value.length];
 		System.arraycopy(ByteUtil.toBytes(pointer.getLastAccessTime()), 0, bytes, Meta.LAST_ACCESS_OFFSET, 8);
-		System.arraycopy(ByteUtil.toBytes(pointer.getTtl()), 0, bytes, Meta.TTL_OFFSET, 8);
-		
+		System.arraycopy(ByteUtil.toBytes(pointer.getTtl()), 0, bytes, Meta.TTL_OFFSET, 8);		
 		System.arraycopy(ByteUtil.toBytes(key.length), 0, bytes, Meta.KEY_SIZE_OFFSET, 4);
 		System.arraycopy(ByteUtil.toBytes(value.length), 0, bytes, Meta.VALUE_SIZE_OFFSET, 4);
-
 		System.arraycopy(key, 0, bytes, Meta.META_SIZE, key.length);
 		System.arraycopy(value, 0, bytes, Meta.META_SIZE + key.length, value.length);
 		return bytes;
@@ -131,11 +126,9 @@ public class StorageBlock implements IBlock {
 	protected Allocation allocate(int payloadLength) {
 		
 		int itemOffset = currentItemOffset.addAndGet(Meta.META_SIZE+payloadLength);
-		
 		if(capacity < itemOffset){
 			return null;
 		}
-
         return new Allocation(itemOffset - payloadLength - Meta.META_SIZE);
 	}
 
@@ -244,42 +237,28 @@ public class StorageBlock implements IBlock {
 	}
 
 	@Override
-	public List<Meta> getAllValidMeta() throws IOException {
-		List<Meta> list = new ArrayList<Meta>();
-		int useSize = 0;
-		int offset = 0;
-		for (; offset < capacity; ) {
+	public Item readItem(int offset) throws IOException {
+		if(offset < capacity) {
 			Meta meta = readMeta(offset);
 			if(0==meta.getLastAccessTime()) {
-				break;
+				return null;
 			}
-			if ((System.currentTimeMillis() - meta.getLastAccessTime()) < meta.getTtl()||meta.getTtl() == Meta.TTL_NEVER_EXPIRE) {
-				list.add(meta);
-				useSize += (meta.getKeySize()+meta.getValueSize()+Meta.META_SIZE);
-			}
-			offset += (Meta.META_SIZE+meta.getKeySize()+meta.getValueSize());
+			
+			Item item = new Item(meta);
+			//read item
+			byte[] bytes = new byte[meta.getKeySize() + meta.getValueSize()];
+			underlyingStorage.get(meta.getOffSet() + Meta.META_SIZE, bytes);		
+			byte[] key = new byte[meta.getKeySize()];		
+			System.arraycopy(bytes, 0, key, 0, key.length);
+			byte[] value = new byte[meta.getValueSize()];		
+			System.arraycopy(bytes, key.length, value, 0, value.length);		
+			item.setKey(key);
+			item.setValue(value);
+			return item;
+			
+		}else {
+			return null;
 		}
-		dirtyStorage.set(capacity - useSize);
-		usedStorage.set(useSize);
-		if(getDirtyRatio() < QuickCache.DEFAULT_DIRTY_RATIO_THRESHOLD) {
-			list.clear();
-		}
-		return list;
-	}
-
-	@Override
-	public Item readItem(Meta meta) throws IOException {
-		Item item = new Item();
-		//read item
-		byte[] bytes = new byte[meta.getKeySize() + meta.getValueSize()];
-		underlyingStorage.get(meta.getOffSet() + Meta.META_SIZE, bytes);		
-		byte[] key = new byte[meta.getKeySize()];		
-		System.arraycopy(bytes, 0, key, 0, key.length);
-		byte[] value = new byte[meta.getValueSize()];		
-		System.arraycopy(bytes, key.length, value, 0, value.length);		
-		item.setKey(key);
-		item.setValue(value);
-		return item;
 	}
 
 }

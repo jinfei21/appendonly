@@ -85,7 +85,10 @@ public class StorageManager {
 	 */
     public final double dirtyRatioThreshold;
     
-    private int allowMFileCount = 0;
+	/**
+	 * The number of memory blocks allow to be created.
+	 */
+	private int allowedOffHeapModeBlockCount;
 	
 	
 	public StorageManager(String dir, int capacityPerBlock, int initialNumberOfBlocks, StorageMode storageMode,
@@ -95,6 +98,11 @@ public class StorageManager {
 		this.startMode = startMode;
 		this.capacityPerBlock = capacityPerBlock;
 		this.dir = dir;
+		if (storageMode == StorageMode.MapFile) {
+			this.allowedOffHeapModeBlockCount = (int) (maxOffHeapMemorySize / capacityPerBlock);
+		} else {
+			this.allowedOffHeapModeBlockCount = 0;
+		}
 		initializeBlocks(new File(dir), initialNumberOfBlocks);
 	}
 	
@@ -127,16 +135,81 @@ public class StorageManager {
 	
 	public void loadPointerMap(ConcurrentMap<WrapperKey, Pointer> map)throws IOException {
         synchronized (this) {
-
+        	Map<WrapperKey, Long> deleteMap = new HashMap<WrapperKey, Long>();
+        	Iterator<IBlock> it = usedBlocks.iterator();
+        	
+        	while (it.hasNext()) {
+        		IBlock block = it.next();
+        		Item item = block.readItem(0);
+        		if(item==null) {
+        			it.remove();
+					freeBlocks.offer(block);
+        		}
+        		
+        		while(item != null) {
+        			Meta meta = item.getMeta();
+        			if(meta != null) {
+        				//collect all delete meta 
+        				WrapperKey wKey = new WrapperKey(item.getKey());
+        				if(meta.getTtl() == Meta.TTL_DELETE) {
+        					Long accesstime = deleteMap.get(wKey);
+        					if(accesstime == null) {
+        						accesstime = meta.getLastAccessTime();
+        						deleteMap.put(wKey, accesstime);
+        						
+        					}else {
+        						if(accesstime <= meta.getLastAccessTime()) {
+            						accesstime = meta.getLastAccessTime();
+            						deleteMap.put(wKey, accesstime);
+        						}
+        					}
+        					block.markDirty(Meta.META_SIZE+item.getKey().length+item.getValue().length);
+        					Pointer oldPointer = map.get(wKey);
+        					if(oldPointer != null) {
+        						if(accesstime > oldPointer.getLastAccessTime()) {
+        							map.remove(wKey);
+        							oldPointer.getBlock().markDirty(Meta.META_SIZE+oldPointer.getItemSize());
+        						}
+        					}
+        					
+        				}else {
+        					Long accesstime = deleteMap.get(wKey);
+        					Pointer newPointer = new Pointer(block,meta.getOffSet(),item.getKey().length,item.getValue().length,meta.getTtl(),meta.getLastAccessTime());
+        					if(accesstime == null) {
+        						Pointer oldPointer = map.get(wKey);
+        						if(oldPointer==null) {
+        							map.put(wKey, newPointer);
+        						}else {
+        							if(oldPointer.getLastAccessTime()<=newPointer.getLastAccessTime()) {
+        								map.put(wKey, newPointer);
+        								oldPointer.getBlock().markDirty(Meta.META_SIZE+oldPointer.getItemSize());
+        							}else {
+        								newPointer.getBlock().markDirty(Meta.META_SIZE+newPointer.getItemSize());
+        							}
+        						}
+        					}else {
+        						if(accesstime <= newPointer.getLastAccessTime()) {
+        							map.put(wKey, newPointer);
+        						}else {
+        							newPointer.getBlock().markDirty(Meta.META_SIZE+newPointer.getItemSize());
+        						}
+        					}
+        				}        				
+        			}else {
+        				break;
+        			}
+        			item = block.readItem(meta.getOffSet()+meta.getKeySize()+meta.getValueSize()+Meta.META_SIZE);
+        		}
+        	}
         }
 	}
 	
 	private IBlock createNewBlock(int index) throws IOException {
 		if(storageMode == StorageMode.MapFile) {
-			if(allowMFileCount>30) {
+			if(allowedOffHeapModeBlockCount<0) {
 				return new StorageBlock(this.dir, index, this.capacityPerBlock, StorageMode.PureFile);
 			}
-			allowMFileCount++;
+			allowedOffHeapModeBlockCount--;
 		}
 		return new StorageBlock(this.dir, index, this.capacityPerBlock, storageMode);
 	}

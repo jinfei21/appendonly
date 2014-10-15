@@ -3,6 +3,7 @@ package com.ctriposs.quickcache;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ import org.junit.runners.Parameterized;
 
 import com.ctriposs.quickcache.util.TestSample;
 import com.ctriposs.quickcache.util.TestUtil;
+import com.ctriposs.quickcache.utils.FileUtil;
 
 @RunWith(Parameterized.class)
 public class QuickCachePerfTestA {
@@ -36,8 +38,8 @@ public class QuickCachePerfTestA {
     public static Collection<CacheConfig.StorageMode[]> data() throws IOException {
         CacheConfig.StorageMode[][] data = { 
         		{ CacheConfig.StorageMode.PureFile }
-                //,{ CacheConfig.StorageMode.MapFile }
-                //,{ CacheConfig.StorageMode.OffHeapFile }
+                ,{ CacheConfig.StorageMode.MapFile }
+                ,{ CacheConfig.StorageMode.OffHeapFile }
                 };
         return Arrays.asList(data);
     }
@@ -148,7 +150,7 @@ public class QuickCachePerfTestA {
 
     @After
     public void close() throws IOException {
-    	/*
+    	
         try {
             cache.close();
             FileUtil.deleteDirectory(new File(TEST_DIR));
@@ -158,12 +160,12 @@ public class QuickCachePerfTestA {
                 FileUtil.deleteDirectory(new File(TEST_DIR));
             } catch (IllegalStateException e1) {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(9000);
                 } catch (InterruptedException e2) {
                 }
                 FileUtil.deleteDirectory(new File(TEST_DIR));
             }
         }
-        */
+        
     }
 }
