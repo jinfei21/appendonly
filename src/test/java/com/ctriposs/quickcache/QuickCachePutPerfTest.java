@@ -22,7 +22,7 @@ public class QuickCachePutPerfTest {
     private static final int THREAD_COUNT = 512;
     private static final String TEST_DIR = TestUtil.TEST_BASE_DIR + "performance/put/";
 
-    private final String TEST_STR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private final String TEST_STR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static QuickCache<String> cache;
 
     @Parameterized.Parameter(value = 0)
@@ -31,7 +31,7 @@ public class QuickCachePutPerfTest {
     @Parameterized.Parameters
     public static Collection<CacheConfig.StorageMode[]> data() throws IOException {
         CacheConfig.StorageMode[][] data = {
-                { CacheConfig.StorageMode.PureFile },
+                { CacheConfig.StorageMode.MapFile },
         };
         return Arrays.asList(data);
     }
@@ -44,8 +44,10 @@ public class QuickCachePutPerfTest {
                 .setMigrateInterval(500);
         QuickCache<String> cache = new QuickCache<String>(TEST_DIR, config);
 
+        final Random random = new Random();
         TestSample sample = new TestSample();
         for (int i = 0; i < INIT_COUNT; i++) {
+        	sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
             cache.put(String.valueOf(i), sample.toBytes());
         }
 
@@ -70,7 +72,7 @@ public class QuickCachePutPerfTest {
                 (int) (INIT_COUNT * 2 * 1e6 / duration));
     }
 
-    @Test
+
     public void testMultiThreadPut() throws Exception {
         final int count = 2*1000*1000;
         ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -112,7 +114,7 @@ public class QuickCachePutPerfTest {
 
     @After
     public void close() throws IOException {
-        try {
+       /* try {
             cache.close();
             FileUtil.deleteDirectory(new File(TEST_DIR));
         } catch (IOException e) {
@@ -127,5 +129,6 @@ public class QuickCachePutPerfTest {
                 FileUtil.deleteDirectory(new File(TEST_DIR));
             }
         }
+        */
     }
 }
