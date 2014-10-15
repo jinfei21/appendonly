@@ -38,8 +38,8 @@ public class QuickCachePerfTestA {
     public static Collection<CacheConfig.StorageMode[]> data() throws IOException {
         CacheConfig.StorageMode[][] data = { 
         		{ CacheConfig.StorageMode.PureFile }
-                ,{ CacheConfig.StorageMode.MapFile }
-                ,{ CacheConfig.StorageMode.OffHeapFile }
+                //,{ CacheConfig.StorageMode.MapFile }
+                //,{ CacheConfig.StorageMode.OffHeapFile }
                 };
         return Arrays.asList(data);
     }
@@ -49,7 +49,7 @@ public class QuickCachePerfTestA {
         config.setStorageMode(storageMode)
                 .setCapacityPerBlock(128 * 1024 * 1024)
                 .setExpireInterval(2 * 1000)
-                .setMigrateInterval(10);
+                .setMigrateInterval(2 * 1000);
         QuickCache<String> cache = new QuickCache<String>(TEST_DIR, config);
         return cache;
     }

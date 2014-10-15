@@ -18,10 +18,11 @@ import java.util.concurrent.Future;
 @RunWith(Parameterized.class)
 public class QuickCachePutPerfTest {
 
-    private static final int INIT_COUNT = 600000;
+    private static final int INIT_COUNT = 40000;
     private static final int THREAD_COUNT = 512;
     private static final String TEST_DIR = TestUtil.TEST_BASE_DIR + "performance/put/";
 
+    private final String TEST_STR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static QuickCache<String> cache;
 
     @Parameterized.Parameter(value = 0)
@@ -40,7 +41,7 @@ public class QuickCachePutPerfTest {
         config.setStorageMode(storageMode)
                 .setCapacityPerBlock(128 * 1024 * 1024)
                 .setExpireInterval(2 * 1000)
-                .setMigrateInterval(10);
+                .setMigrateInterval(500);
         QuickCache<String> cache = new QuickCache<String>(TEST_DIR, config);
 
         TestSample sample = new TestSample();
@@ -59,21 +60,14 @@ public class QuickCachePutPerfTest {
         long start = System.nanoTime();
 
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            sample.stringA = "a";
-            sample.stringB = "b";
-            String key = String.valueOf(random.nextInt(INIT_COUNT));
-            cache.put(key, sample.toBytes());
-        }
-        for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            sample.stringA = "aaaaaaaaaaaaaaa";
-            sample.stringB = "bbbbbbbbbbbbbbb";
-            String key = String.valueOf(random.nextInt(INIT_COUNT));
+            sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
+            String key = String.valueOf(random.nextInt(10));
             cache.put(key, sample.toBytes());
         }
 
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
-                (int) (INIT_COUNT * 4 * 1e6 / duration));
+                (int) (INIT_COUNT * 2 * 1e6 / duration));
     }
 
     @Test
@@ -95,8 +89,8 @@ public class QuickCachePutPerfTest {
                     try {
                         final TestSample sample = new TestSample();
                         for (int j = finalI; j < count; j += THREAD_COUNT) {
-                            sample.stringA = "aaaaa";
-                            cache.put(String.valueOf(random.nextInt(INIT_COUNT)), sample.toBytes());
+                            sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
+                            cache.put(String.valueOf(random.nextInt(20)), sample.toBytes());
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
