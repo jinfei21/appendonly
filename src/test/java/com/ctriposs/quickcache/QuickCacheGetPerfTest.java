@@ -57,15 +57,11 @@ public class QuickCacheGetPerfTest {
     @Test
     public void testSingleThreadGet() throws Exception {
         cache = cache();
-        final TestSample sample = new TestSample();
         Random random = new Random();
 
         long start = System.nanoTime();
 
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            sample.intA = i;
-            sample.doubleA = i;
-            sample.longA = i;
             String key = String.valueOf(random.nextInt(INIT_COUNT));
             byte[] result = cache.get(key);
             assertNotNull(result);
