@@ -15,6 +15,9 @@ public class StorageBlock implements IBlock {
 	/** The index. */
 	private final int index;
 	
+	/** The Storage Mode*/
+	private StorageMode storageMode;
+	
 	/** The capacity. */
 	private final int capacity;
 	
@@ -30,6 +33,9 @@ public class StorageBlock implements IBlock {
 	/** The item offset within the active block.*/
 	private final AtomicInteger currentItemOffset = new AtomicInteger(0);
 	
+	/** The never expire size*/
+	private final AtomicInteger foreverStorage = new AtomicInteger(0);
+	
 	/**
 	 * Instantiates a new storage block.
 	 *
@@ -41,6 +47,7 @@ public class StorageBlock implements IBlock {
 	public StorageBlock(String dir, int index, int capacity, StorageMode storageMode) throws IOException{
 		this.index = index;
 		this.capacity = capacity;
+		this.storageMode = storageMode;
 		switch (storageMode) {
 		case PureFile:
 			this.underlyingStorage = new PureFileStorage(dir, index, capacity);
@@ -65,6 +72,7 @@ public class StorageBlock implements IBlock {
 	public StorageBlock(File file, int index, int capacity, StorageMode storageMode) throws IOException{
 		this.index = index;
 		this.capacity = capacity;
+		this.storageMode = storageMode;
 		switch (storageMode) {
             case PureFile:
                 this.underlyingStorage = new PureFileStorage(file, capacity);
@@ -89,7 +97,11 @@ public class StorageBlock implements IBlock {
 		Pointer pointer = new Pointer(this, allocation.metaOffset, key.length, value.length, ttl);
 		underlyingStorage.put(allocation.metaOffset, makeItemBytes(pointer, key, value));
 		// used storage update
-		usedStorage.addAndGet(pointer.getItemSize() + Meta.META_SIZE);
+		int useSize = pointer.getItemSize() + Meta.META_SIZE;
+		usedStorage.addAndGet(useSize);
+		if(ttl == Meta.TTL_NEVER_EXPIRE){
+			foreverStorage.addAndGet(useSize);
+		}
 		return pointer;
 	}
 
@@ -201,6 +213,7 @@ public class StorageBlock implements IBlock {
 	public void free() {
 		dirtyStorage.set(0);
 		usedStorage.set(0);
+		foreverStorage.set(0);
 		currentItemOffset.set(0); 
 		underlyingStorage.free();
 	}
@@ -258,6 +271,20 @@ public class StorageBlock implements IBlock {
 		}else {
 			return null;
 		}
+	}
+
+	@Override
+	public StorageMode getStorageMode() {
+		return storageMode;
+	}
+	
+	private long getForever(){
+		return foreverStorage.get();
+	}
+
+	@Override
+	public double getForeverRatio() {
+		return (getForever() * 1.0) / getCapacity();
 	}
 
 }

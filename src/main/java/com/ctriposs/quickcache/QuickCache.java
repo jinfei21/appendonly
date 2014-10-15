@@ -259,7 +259,12 @@ public class QuickCache<K> implements ICache<K> {
 		public void process(QuickCache<K> cache) {
 			
 			migrateCounter.incrementAndGet();
-			Set<IBlock> dirtySet = cache.storageManager.getDirtyBlocks();
+			clearDirtyBlock(cache.storageManager.getDirtyBlocks());
+			clearDirtyBlock(cache.storageManager.getForeverBlocks());
+			
+		}
+		
+		private void clearDirtyBlock(Set<IBlock> dirtySet){
 			Set<IBlock> errorSet = new HashSet<IBlock>();
 			for (WrapperKey wKey : pointerMap.keySet()) {
 				Pointer oldPointer = pointerMap.get(wKey);
@@ -286,8 +291,7 @@ public class QuickCache<K> implements ICache<K> {
 				if(!errorSet.contains(block)) {
 					block.free();
 				}
-			}
-			
+			}			
 			storageManager.clean();
 		}
 	}

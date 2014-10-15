@@ -366,6 +366,20 @@ public class StorageManager {
 		}
 		return set;
     }
+    
+    public Set<IBlock> getForeverBlocks(){
+		Set<IBlock> set = new HashSet<IBlock>();
+		if(StorageMode.PureFile == activeBlock.getStorageMode()){
+			for(IBlock block : usedBlocks) {
+				if(StorageMode.PureFile != block.getStorageMode()){
+					if(dirtyRatioThreshold < block.getForeverRatio()) {
+						set.add(block);
+					}
+				}
+			}
+		}		
+		return set;
+    }
 
     /**
      * Get blocks amount

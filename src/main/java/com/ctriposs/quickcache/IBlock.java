@@ -2,10 +2,9 @@ package com.ctriposs.quickcache;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
 
+import com.ctriposs.quickcache.CacheConfig.StorageMode;
 import com.ctriposs.quickcache.storage.Item;
-import com.ctriposs.quickcache.storage.Meta;
 import com.ctriposs.quickcache.storage.Pointer;
 
 public interface IBlock extends Comparable<IBlock>, Closeable {
@@ -79,6 +78,21 @@ public interface IBlock extends Comparable<IBlock>, Closeable {
 	 * @return an index
 	 */
 	int getIndex();
+	
+	
+	/**
+	 * Get forever ratio of this storage block
+	 * 
+	 * @return forever ratio
+	 */
+	double getForeverRatio();
+	
+	/**
+	 * Get mode of this storage block
+	 * 
+	 * @return storageMode
+	 */
+	StorageMode getStorageMode();
 	
 	/**
 	 * Frees the storage.
