@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 @RunWith(Parameterized.class)
 public class QuickCachePutPerfTest {
 
-    private static final int INIT_COUNT = 40000;
+    private static final int INIT_COUNT = 400000;
     private static final int THREAD_COUNT = 512;
     private static final String TEST_DIR = TestUtil.TEST_BASE_DIR + "performance/put/";
 
@@ -31,7 +31,7 @@ public class QuickCachePutPerfTest {
     @Parameterized.Parameters
     public static Collection<CacheConfig.StorageMode[]> data() throws IOException {
         CacheConfig.StorageMode[][] data = {
-                { CacheConfig.StorageMode.MapFile },
+                { CacheConfig.StorageMode.PureFile },
         };
         return Arrays.asList(data);
     }
