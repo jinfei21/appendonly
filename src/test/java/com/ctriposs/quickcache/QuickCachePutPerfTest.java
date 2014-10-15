@@ -10,14 +10,16 @@ import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @RunWith(Parameterized.class)
 public class QuickCachePutPerfTest {
 
-    private static final int INIT_COUNT = 200000;
+    private static final int INIT_COUNT = 600000;
+    private static final int THREAD_COUNT = 512;
     private static final String TEST_DIR = TestUtil.TEST_BASE_DIR + "performance/put/";
 
     private static QuickCache<String> cache;
@@ -43,9 +45,6 @@ public class QuickCachePutPerfTest {
 
         TestSample sample = new TestSample();
         for (int i = 0; i < INIT_COUNT; i++) {
-            sample.intA = i;
-            sample.doubleA = i;
-            sample.longA = i;
             cache.put(String.valueOf(i), sample.toBytes());
         }
 
@@ -57,19 +56,64 @@ public class QuickCachePutPerfTest {
         cache = cache();
         final TestSample sample = new TestSample();
         Random random = new Random();
-
         long start = System.nanoTime();
 
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            sample.intA = i;
-            sample.doubleA = i;
-            sample.longA = i;
+            sample.stringA = "a";
+            sample.stringB = "b";
             String key = String.valueOf(random.nextInt(INIT_COUNT));
             cache.put(key, sample.toBytes());
         }
+        for (int i = 0; i < 2 * INIT_COUNT; i++) {
+            sample.stringA = "aaaaaaaaaaaaaaa";
+            sample.stringB = "bbbbbbbbbbbbbbb";
+            String key = String.valueOf(random.nextInt(INIT_COUNT));
+            cache.put(key, sample.toBytes());
+        }
+
         long duration = System.nanoTime() - start;
-        System.out.printf("Put/get %,d K operations per second%n",
-                (int) (INIT_COUNT * 2 * 1e6 / duration));
+        System.out.printf("Put/get %,d K operations per second single thread%n",
+                (int) (INIT_COUNT * 4 * 1e6 / duration));
+    }
+
+    @Test
+    public void testMultiThreadPut() throws Exception {
+        final int count = 2*1000*1000;
+        ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        final Random random = new Random();
+
+        cache = cache();
+
+        List<Future<?>> futures = new ArrayList<Future<?>>();
+        long start = System.nanoTime();
+        for (int i = 0; i < THREAD_COUNT; i++) {
+            final int finalI = i;
+            futures.add(service.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        final TestSample sample = new TestSample();
+                        for (int j = finalI; j < count; j += THREAD_COUNT) {
+                            sample.stringA = "aaaaa";
+                            cache.put(String.valueOf(random.nextInt(INIT_COUNT)), sample.toBytes());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }));
+        }
+
+        for (Future<?> future : futures) {
+            future.get();
+        }
+
+        long duration = System.nanoTime() - start;
+        System.out.printf("Put/get %,d K operations per second multi thread%n",
+                (int) (count * 1e6 / duration));
+        service.shutdown();
     }
 
     @After
