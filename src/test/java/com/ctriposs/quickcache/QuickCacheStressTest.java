@@ -19,10 +19,10 @@ public class QuickCacheStressTest {
         int valueLengthLimit = 1024 * 16;
 
         CacheConfig config = new CacheConfig();
-        config.setStorageMode(CacheConfig.StorageMode.PureFile)
+        config.setStorageMode(CacheConfig.StorageMode.MapFile)
                 .setExpireInterval(2 * 1000)
-                .setMigrateInterval(2 * 1000);
-                //.setMaxOffHeapMemorySize(5 * 10 * 1024 * 1024);
+                .setMigrateInterval(2 * 1000)
+                .setMaxOffHeapMemorySize(1 * 1024 * 1024 * 1024L);
         cache = new QuickCache<String>(TEST_DIR, config);
         Map<String, byte[]> bytesMap = new HashMap<String, byte[]>();
 
@@ -38,20 +38,23 @@ public class QuickCacheStressTest {
         System.out.println("Start from date " + new Date());
         long start = System.currentTimeMillis();
         for (long counter = 0;; counter++) {
-            int rndKey = random.nextInt(numKeyLimit);
-            boolean put = random.nextDouble() < 0.5;
+            //int rndKey = random.nextInt(numKeyLimit);
+            boolean put = true;
             if (put) {
                 bytes = rndStrings[random.nextInt(3)].getBytes();
-                bytesMap.put(String.valueOf(rndKey), bytes);
-                cache.put(String.valueOf(rndKey), bytes);
-            } else {
-                bytesMap.remove(String.valueOf(rndKey));
-                byte[] oldV = cache.delete(String.valueOf(rndKey));
-                byte[] v = cache.get(String.valueOf(rndKey));
-                if (v != null) {
-                    System.out.println("should be null. key:" + String.valueOf(rndKey) + "    Value:" + new String(v));
-                    System.out.println("                key:" + String.valueOf(rndKey) + "    oldValue:" + (oldV == null ? null : new String(oldV)));
+                if (counter <= numKeyLimit) {
+                    bytesMap.put(String.valueOf(counter), bytes);
                 }
+                //bytesMap.put(String.valueOf(counter), bytes);
+                cache.put(String.valueOf(counter), bytes);
+            } else {
+            /*bytesMap.remove(String.valueOf(rndKey));
+            byte[] oldV = cache.delete(String.valueOf(rndKey));
+            byte[] v = cache.get(String.valueOf(rndKey));
+            if (v != null) {
+                System.out.println("should be null. key:" + String.valueOf(rndKey) + "    Value:" + new String(v));
+                System.out.println("                key:" + String.valueOf(rndKey) + "    oldValue:" + (oldV == null ? null : new String(oldV)));
+            }*/
             }
 
             cache.put(counter + "-ttl", bytes, (long) 10 * 1000);
