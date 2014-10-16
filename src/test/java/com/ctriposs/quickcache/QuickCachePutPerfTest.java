@@ -35,6 +35,8 @@ public class QuickCachePutPerfTest {
     public static Collection<CacheConfig.StorageMode[]> data() throws IOException {
         CacheConfig.StorageMode[][] data = {
                 { CacheConfig.StorageMode.PureFile },
+                { CacheConfig.StorageMode.MapFile },
+                { CacheConfig.StorageMode.OffHeapFile }
         };
         return Arrays.asList(data);
     }
@@ -48,10 +50,8 @@ public class QuickCachePutPerfTest {
         QuickCache<String> cache = new QuickCache<String>(TEST_DIR, config);
 
         final Random random = new Random();
-        TestSample sample = new TestSample();
         for (int i = 0; i < INIT_COUNT; i++) {
-        	//sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
-            cache.put(String.valueOf(i), TEST_STR.getBytes(),9*1000);
+            cache.put(String.valueOf(i), TEST_STR.getBytes(), 9*1000);
         }
 
         return cache;
@@ -60,12 +60,10 @@ public class QuickCachePutPerfTest {
 
     public void testSingleThreadPut() throws Exception {
         cache = cache();
-        final TestSample sample = new TestSample();
         Random random = new Random();
         long start = System.nanoTime();
 
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            //sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
             String key = String.valueOf(random.nextInt(2*INIT_COUNT));
             cache.put(key, TEST_STR.substring(0, random.nextInt(TEST_STR.length())).getBytes());
         }
@@ -92,9 +90,7 @@ public class QuickCachePutPerfTest {
                 @Override
                 public void run() {
                     try {
-                        final TestSample sample = new TestSample();
                         for (int j = finalI; j < count; j += THREAD_COUNT) {
-                           // sample.stringA = TEST_STR.substring(0, random.nextInt(TEST_STR.length()));
                             cache.put(String.valueOf(random.nextInt(count)), TEST_STR.substring(0, random.nextInt(TEST_STR.length())).getBytes());
                         }
                     } catch (IOException e) {
