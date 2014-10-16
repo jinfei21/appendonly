@@ -58,7 +58,5 @@ public class PureFileStorage implements IStorage {
 		if (this.raf != null) {
 			this.raf.close();
 		}
-		
 	}
-	
 }

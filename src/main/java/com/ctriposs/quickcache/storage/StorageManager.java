@@ -110,7 +110,7 @@ public class StorageManager {
 		List<File> list = null;
 		switch (startMode) {
             case ClearOldFile:
-                //FileUtil.deleteDirectory(directory);
+                FileUtil.deleteDirectory(directory);
                 list = FileUtil.listFiles(directory);
                 break;
             case RecoveryFromFile:

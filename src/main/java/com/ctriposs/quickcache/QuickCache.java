@@ -141,7 +141,6 @@ public class QuickCache<K> implements ICache<K> {
         WrapperKey wKey = new WrapperKey(ToBytes(key));
 		Pointer oldPointer = pointerMap.remove(wKey);
 		if(oldPointer!=null) {
-			//byte[] payload = storageManager.retrieve(oldPointer);
 			byte[] bytes = new byte[1];
 			Pointer newPointer = storageManager.store(wKey.getKey(),bytes,Meta.TTL_DELETE);
 			storageManager.markDirty(oldPointer);
@@ -171,7 +170,7 @@ public class QuickCache<K> implements ICache<K> {
 		while(true) {
 			Pointer oldPointer = pointerMap.get(wKey);
 			if(oldPointer != null){
-				if(oldPointer.getCreateNanoTime()<=newPointer.getCreateNanoTime()) {
+				if(oldPointer.getCreateNanoTime() <= newPointer.getCreateNanoTime()) {
 
 					if(pointerMap.replace(wKey, oldPointer, newPointer)) {
 						storageManager.markDirty(oldPointer); 

@@ -31,9 +31,9 @@ public class QuickCacheUnitTest {
     @Parameterized.Parameters
     public static Collection<CacheConfig.StorageMode[]> data() {
         CacheConfig.StorageMode[][] data = {
-                //{CacheConfig.StorageMode.PureFile},
+                {CacheConfig.StorageMode.PureFile},
                 {CacheConfig.StorageMode.MapFile},
-                //{CacheConfig.StorageMode.OffHeapFile}
+                {CacheConfig.StorageMode.OffHeapFile}
         };
 
         return Arrays.asList(data);
@@ -78,7 +78,7 @@ public class QuickCacheUnitTest {
     public void testDelete() throws Exception {
         cache = cache();
         byte[] payload = cache.delete(0);
-        assertEquals(new String(payload), "A");
+        assertNull(payload);
         assertNull(cache.get(0));
 
         payload = cache.delete(6);
