@@ -39,7 +39,7 @@ public class QuickCacheStressTest {
         long start = System.currentTimeMillis();
         for (long counter = 0;; counter++) {
             int rndKey = random.nextInt(numKeyLimit);
-            boolean put = random.nextDouble() < 0.5;
+            boolean put = true;
             if (put) {
                 bytes = rndStrings[random.nextInt(3)].getBytes();
                 bytesMap.put(String.valueOf(rndKey), bytes);

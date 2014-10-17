@@ -3,6 +3,7 @@ package com.ctriposs.quickcache.storage;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import com.ctriposs.quickcache.utils.ByteUtil;
 import com.ctriposs.quickcache.utils.HashUtil;
 
 public class WrapperKey implements Serializable,Comparable {
@@ -39,14 +40,8 @@ public class WrapperKey implements Serializable,Comparable {
 	public int compareTo(Object obj) {
 		if (obj instanceof WrapperKey) {
 			WrapperKey other = (WrapperKey) obj;
-			for(int i=0;i<key.length&&i<=other.key.length;i++){
-				if(key[i]<other.key[i]){
-					return -1;
-				}else{
-					return 1;
-				}
-			}
+			return ByteUtil.compare(key, other.key);
 		}
-		return 0;
+		return 1;
 	}
 }
