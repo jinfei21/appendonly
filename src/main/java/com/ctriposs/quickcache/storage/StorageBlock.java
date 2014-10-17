@@ -8,8 +8,6 @@ import com.ctriposs.quickcache.IBlock;
 import com.ctriposs.quickcache.IStorage;
 import com.ctriposs.quickcache.utils.ByteUtil;
 
-
-
 public class StorageBlock implements IBlock {
 	
 	/** The index. */
@@ -108,8 +106,6 @@ public class StorageBlock implements IBlock {
 	
 	private byte[] makeItemBytes(Pointer pointer,byte[] key, byte[] value) {
 		byte[] bytes = new byte[Meta.META_SIZE + key.length + value.length];
-        //ByteBuffer byteBuffer = ByteBuffer.allocate(Meta.META_SIZE + key.length + value.length);
-        //byteBuffer.put(ByteUtil.toBytes(pointer.getLastAccessTime()));
 		System.arraycopy(ByteUtil.toBytes(pointer.getLastAccessTime()), 0, bytes, Meta.LAST_ACCESS_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(pointer.getTtl()), 0, bytes, Meta.TTL_OFFSET, 8);		
 		System.arraycopy(ByteUtil.toBytes(key.length), 0, bytes, Meta.KEY_SIZE_OFFSET, 4);

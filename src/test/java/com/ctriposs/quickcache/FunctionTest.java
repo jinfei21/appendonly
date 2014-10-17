@@ -31,7 +31,6 @@ public class FunctionTest extends TestCase {
 
 			cache.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

@@ -56,8 +56,11 @@ public class Pointer {
      * @return expired or not
      */
     public boolean isExpired() {
-	    if (ttl < 0) return false; 				// never expire
-	    if (lastAccessTime < 0) return false; 		// not initialized
+	    if (ttl < 0)
+            return false; 				// never expire
+	    if (lastAccessTime < 0)
+            return false; 		// not initialized
+
 	    return System.currentTimeMillis() - lastAccessTime > ttl;
     }
     

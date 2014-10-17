@@ -12,7 +12,6 @@ public class Meta implements Serializable {
 	public static final int KEY_SIZE_OFFSET = 16;
 	public static final int VALUE_SIZE_OFFSET = 20;
 
-	
 	public static final long TTL_NEVER_EXPIRE = -1L;
 	public static final long TTL_DELETE = 0L;
 
@@ -23,7 +22,6 @@ public class Meta implements Serializable {
 	private int offSet;
 	
 	public Meta(int offSet) {
-
 		this.keySize = 0;
 		this.valueSize = 0;
 		this.lastAccessTime = System.currentTimeMillis();

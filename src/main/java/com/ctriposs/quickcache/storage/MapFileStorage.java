@@ -87,8 +87,7 @@ public class MapFileStorage implements IStorage {
 
 		@Override
 		protected synchronized ByteBuffer initialValue() {
-			ByteBuffer dup = _src.duplicate();
-			return dup;
+            return _src.duplicate();
 		}
 	}
 
