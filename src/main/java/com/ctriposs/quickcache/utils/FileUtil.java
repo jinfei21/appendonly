@@ -1,12 +1,17 @@
 package com.ctriposs.quickcache.utils;
 
+import static java.nio.file.Files.isSymbolicLink;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.nio.file.Files.isSymbolicLink;
+import sun.nio.ch.FileChannelImpl;
 
 public class FileUtil {
 
@@ -127,5 +132,25 @@ public class FileUtil {
                 throw new IOException(message);
             }
         }
+    }
+    
+    
+    private static final Method unmap;
+    static {
+        Method x;
+        try {
+            x = FileChannelImpl.class.getDeclaredMethod("unmap", MappedByteBuffer.class);
+        }
+        catch (NoSuchMethodException e) {
+            throw new AssertionError(e);
+        }
+        x.setAccessible(true);
+        unmap = x;
+    }
+
+    public static void unmap(MappedByteBuffer buffer) throws Throwable{
+        
+       unmap.invoke(null, buffer);
+     
     }
 }

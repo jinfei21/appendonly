@@ -8,12 +8,14 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 import com.ctriposs.quickcache.IStorage;
+import com.ctriposs.quickcache.utils.FileUtil;
 
 public class MapFileStorage implements IStorage {
 
 	private RandomAccessFile raf;
 	private FileChannel fileChannel;
 	private ThreadLocalByteBuffer threadLocalBuffer;
+	private MappedByteBuffer mappedByteBuffer;
 
 	public MapFileStorage(String dir, int index, int capacity) throws IOException {
 		File backFile = new File(dir);
@@ -23,13 +25,13 @@ public class MapFileStorage implements IStorage {
 		String backFileName = dir + index + "-" + System.currentTimeMillis() + DATA_FILE_SUFFIX;
 		raf = new RandomAccessFile(backFileName, "rw");
 		fileChannel = raf.getChannel();
-		MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.PRIVATE, 0, capacity);
+		mappedByteBuffer = fileChannel.map(FileChannel.MapMode.PRIVATE, 0, capacity);
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 	
 	public MapFileStorage(File file, int capacity) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
-		MappedByteBuffer mappedByteBuffer = raf.getChannel().map(FileChannel.MapMode.PRIVATE, 0, capacity);
+		mappedByteBuffer = raf.getChannel().map(FileChannel.MapMode.PRIVATE, 0, capacity);
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 
@@ -48,8 +50,14 @@ public class MapFileStorage implements IStorage {
 			raf.close();
 		}
 		//implies system GC
+		try {
+			FileUtil.unmap(mappedByteBuffer);
+		} catch (Throwable e) {
+			throw new IOException(e);
+		}
 		threadLocalBuffer.set(null);
 		threadLocalBuffer = null;
+
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import com.ctriposs.quickcache.utils.ByteUtil;
 import com.ctriposs.quickcache.utils.HashUtil;
 
-public class WrapperKey implements Serializable,Comparable {
+public class WrapperKey implements Serializable,Comparable<WrapperKey> {
 
 	private static final long serialVersionUID = 1L;
 	private byte[] key;
@@ -36,12 +36,9 @@ public class WrapperKey implements Serializable,Comparable {
 		return hashCode;
 	}
 
+
 	@Override
-	public int compareTo(Object obj) {
-		if (obj instanceof WrapperKey) {
-			WrapperKey other = (WrapperKey) obj;
-			return ByteUtil.compare(key, other.key);
-		}
-		return 1;
+	public int compareTo(WrapperKey o) {
+		return ByteUtil.compare(key, o.key);
 	}
 }
