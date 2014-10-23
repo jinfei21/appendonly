@@ -144,11 +144,13 @@ public class StorageManager {
         		if(item==null) {
         			it.remove();
 					freeBlocks.offer(block);
+					continue;
         		}
-        		
+        		int usedSize = 0;
         		while(item != null) {
         			Meta meta = item.getMeta();
         			if(meta != null) {
+        				usedSize += (meta.getKeySize()+meta.getValueSize()+Meta.META_SIZE);
         				//collect all delete meta 
         				WrapperKey wKey = new WrapperKey(item.getKey());
         				if(meta.getTtl() == Meta.TTL_DELETE) {
@@ -196,6 +198,7 @@ public class StorageManager {
         					}
         				}        				
         			}else {
+        				block.markDirty(capacityPerBlock-usedSize);
         				break;
         			}
         			item = block.readItem(meta.getOffSet()+meta.getKeySize()+meta.getValueSize()+Meta.META_SIZE);
