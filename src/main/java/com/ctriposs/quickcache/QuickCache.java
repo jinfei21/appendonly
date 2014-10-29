@@ -1,7 +1,6 @@
 package com.ctriposs.quickcache;
 
 import static com.ctriposs.quickcache.utils.ByteUtil.ToBytes;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
